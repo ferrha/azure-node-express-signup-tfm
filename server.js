@@ -5,7 +5,7 @@ var http = require('http');
 var path = require('path');
 var app = express();
 var nodemailer = require('nodemailer');
-var DocumentClient = requier('documentdb').DocumentClient;
+var DocumentClient = require('documentdb').DocumentClient;
 
 // config for azure
 var config = {
