@@ -5,17 +5,22 @@ var http = require('http');
 var path = require('path');
 var app = express();
 var nodemailer = require('nodemailer');
-var projectId = process.env.GCLOUD_PROJECT;
-var keyFilename = './TFM-keyFile.json';
+var DocumentClient = requier('documentdb').DocumentClient;
 
-// Initialize gcloud
-var gcloud = require('gcloud');
+// config for azure
+var config = {
+  endpoint: process.env.dbEndpoint,
+  primaryKey: process.env.primaryKey,
+  database: {
+    id: "tfm-subscribers"
+  },
+  collection: {
+    id: "subscriber"
+  }
+};
 
-// Get a reference to the datastore component
-var datastore = gcloud.datastore({
-  projectId: projectId,
-  keyFilename: keyFilename
-});
+// database initialization
+var DBclient = new DocumentClient(config.endpoint, {masterKey: config.primaryKey});
 
 // create reusable transporter object using the default SMTP transport
 var transporter = nodemailer.createTransport("SMTP", {
@@ -51,16 +56,13 @@ app.post('/signup', function(req, res) {
 //Add signup form data to database.
 function signup (nameSubmitted, emailSubmitted, previewPreference) {
 
-  var taskKey = datastore.key('Subscriber');
+  var data = {
+    email: emailSubmitted,
+    name: nameSubmitted,
+    preview: previewPreference
+  };
 
-  datastore.save({
-    key: taskKey,
-    data: {
-      email: emailSubmitted,
-      name: nameSubmitted,
-      preview: previewPreference
-    }
-  }, function(err) {
+  DBclient.createDocument(config.endpoint, data, function(err) {
     if (err) {
       console.log('Error adding item to database: ', err);
     }
